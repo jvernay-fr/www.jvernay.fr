@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <title>Julien Vernay</title>
+        <link rel="stylesheet" href="/common/style.css" type="text/css">
+    </head>
+    <body>
+        <header>
+            <p>Julien Vernay</p>
+        </header>
+
+        <main>
+
+<!-- PAGE CONTENT BEGIN -->
+

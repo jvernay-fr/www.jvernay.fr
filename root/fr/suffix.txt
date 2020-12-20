@@ -1,0 +1,16 @@
+
+<!-- PAGE CONTENT END -->
+
+        </main>
+    
+        <footer>
+            <p>Ceci est un bas de page...</p>
+        </footer>
+        
+        <script>
+            // Adapt page's title to content's title
+            document.getElementsByTagName("title")[0].textContent = document.getElementsByTagName("h1")[0].textContent + " - Julien Vernay";
+        </script>
+    </body>
+</html>
+
