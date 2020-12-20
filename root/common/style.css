@@ -1,3 +1,9 @@
+
+
+body {
+    max-width: 40rem;
+}
+
 h1 {
-    font-size: 5em;
+    font-size: 2em;
 }
