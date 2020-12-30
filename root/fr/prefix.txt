@@ -7,7 +7,13 @@
     </head>
     <body>
         <header>
-            <p>Julien Vernay</p>
+            <span id="name">Julien Vernay</span>
+            <nav>
+                <ul>
+                    <li><a href="/fr/index.html">Accueil</a></li> - 
+                    <li><a href="/fr/cv.html">CV</a></li>
+                </ul>
+            </nav>
         </header>
 
         <main>

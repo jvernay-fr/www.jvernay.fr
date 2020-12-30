@@ -1,0 +1,55 @@
+:root {
+    --timeline-line-x: 15px;
+    --timeline-border-width: 3px;
+}
+
+.timeline > h2 {
+    border-bottom: var(--timeline-border-width) solid var(--timeline-color);
+    font-variant: small-caps;
+    font-size: 2rem;
+    margin: 0;
+    color: var(--timeline-color);
+}
+.timeline > div {
+    position: relative;
+    margin-left: 20px;
+    display: flex;
+    border-left: var(--timeline-border-width) solid var(--timeline-color);
+    padding: 2rem 0 0 2rem;
+}
+.timeline > div:before {
+    border: var(--timeline-border-width) solid var(--timeline-color);
+    background-color: #FFFFFF;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    content: ' ';
+    position: absolute;
+    left: -14px;
+}
+
+.timeline > div > aside {
+    flex-shrink: 0;
+    width: 22%;
+}
+.timeline > div > aside > * {
+    display: block;
+    width: 80%;
+    margin-bottom: 10px;
+}
+.timeline time {
+    font-style: italic;
+}
+.timeline > div > section > h3 {
+    margin: 0;
+}
+
+.timeline > div > section > *:not(h3) {
+    color: var(--gray);
+    font-size: 1.2rem;
+}
+
+
+
+
+

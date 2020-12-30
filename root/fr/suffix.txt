@@ -4,7 +4,6 @@
         </main>
     
         <footer>
-            <p>Ceci est un bas de page...</p>
         </footer>
         
         <script>
