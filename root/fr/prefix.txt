@@ -11,7 +11,8 @@
             <nav>
                 <ul>
                     <li><a href="/fr/index.html">Accueil</a></li> - 
-                    <li><a href="/fr/cv.html">CV</a></li>
+                    <li><a href="/fr/cv.html">CV</a></li> -
+                    <li><a href="/fr/projets.html">Projets</a></li>
                 </ul>
             </nav>
         </header>

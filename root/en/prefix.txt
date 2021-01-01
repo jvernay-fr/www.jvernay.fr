@@ -11,7 +11,8 @@
             <nav>
                 <ul>
                     <li><a href="/en/index.html">Home</a></li> - 
-                    <li><a href="/en/resume.html">Resume</a></li>
+                    <li><a href="/en/resume.html">Resume</a></li> - 
+                    <li><a href="/en/projects.html">Projects</a></li>
                 </ul>
             </nav>
         </header>

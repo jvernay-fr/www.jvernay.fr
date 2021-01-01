@@ -1,0 +1,93 @@
+<a href="/en/projects.html" class="big-link">[ English version ]</a>
+
+<h1>Projets</h1>
+
+<p>
+    Cliquez sur les titres de projets pour afficher les détails.
+</p>
+
+<details>
+    <summary>Crowd Control<span class="tags">[Game Jam] [Godot Engine]</span></summary>
+    <p>
+        En juillet 2020, j'ai participé avec deux amis à la Game Jam GMTK, dont le thème étant <strong>Out of Control</strong>.
+        Le jeu en résultant est <strong>Crowd Control</strong>, jouable dans le navigateur sur <a href="https://nitsugua.itch.io/crowd-control">itch.io</a>.
+        Dans ce jeu, vous devez contrôler la foule afin qu'elle aille sur la zone qui lui est désignée.
+        Pour cela, vous utilisez votre souris, qui possède trois actions :
+    </p><ul>
+        <li>Clic gauche : regrouper la foule vers le centre de la zone</li>
+        <li>Clic droit : disperser la foule à l'extérieur de la zone</li>
+        <li>Molette : modifier le rayon de la zone</li>
+    </ul><p>
+        Le jeu a été créé avec Godot Engine, et son langage de script GDScript.
+        Dans ce projet, je me suis occupé de coder la foule.
+        Les personnes suivent une simulation de Boids modifiée :
+        un biais est rajouté dû la zone du curseur (qui peut regrouper et disperser la foule),
+        et il y a deux catégories de personnes (les blonds et les bruns) qui ne s'influent pas entre elles.
+        Les zones de destination comptent le nombre de personnes à l'intérieur, et déclenchent
+        la fin du niveau si le nombre de personnes correspond à ce qui était attendu.
+    </p>
+    <figure>
+        <figcaption>Vidéo de démonstration</figcaption>
+        <video controls>
+            <source src="/common/assets/projects/crowd_control.mp4" type="video/mp4">
+        </video>
+    </figure>
+    <p>
+        Les sources sont disponibles sur <a href="https://github.com/arnette-thomas/gmtkjam20">GitHub</a>.
+    </p>
+</details>
+
+<details>
+    <summary>Thomas Chronicles<span class="tags">[C++] [SFML]</span></summary>
+    <p>
+        Pendant les vacances d'été 2019, et pour fêter l'anniversaire d'un ami, j'ai créé le jeu <strong>Thomas Chronicles</strong>.
+        C'est un jeu d'énigmes grandement inspiré par Professeur Layton. Certaines énigmes ont des
+        <em>gameplay</em> particuliers, comme un taquin par exemple, tandis que d'autres demandent simplement d'entrer la réponse.
+    </p><p>
+        Le jeu a été créé entièrement en C++ avec SFML, et a été débogué sous Windows et GNU/Linux.
+        L'objectif était aussi de faire un jeu bien poli, et je suis satisfait du résultat.
+        Notamment, il y a de nombreuses transitions : fondus, défilements, etc.
+        Dû à cela, le code contient de nombreuses machines d'états ne serait-ce que sur la partie graphique.
+    </p>
+    <figure>
+        <figcaption>Vidéo de démonstration</figcaption>
+        <video controls>
+            <source src="/common/assets/projects/ThomasChronicles.mp4" type="video/mp4">
+        </video>
+    </figure>
+</details>
+
+<details>
+    <summary>Modi (QiOVA)<span class="tags">[C++] [Électronique]</span></summary>
+    <p>
+        Lors de mon stage à QiOVA, j'ai été chargé de créer un circuit électronique nommé Modi permettant
+        de tester la QELec (un produit commercialisé par QiOVA), simplement et automatiquement.
+        Pour cela, il doit mesurer la fréquence d'un signal TOR, la tension d'un signal analogique, la durée d'une impulsion...
+        et il doit être pilotable via une liaison série en passant par Arduino. J'ai donc dû concevoir le circuit,
+        trouver et commander les composants, programmer l'Arduino Uno pour qu'elle pilote les différents composants
+        et qu'elle accepte des commandes via la liaison série, et tester le bon fonctionnement du circuit.
+    </p>
+    <figure>
+        <figcaption></figcaption>
+        <img src="/common/assets/projects/modi.png" style="width: 100%"/>
+    </figure>
+</details>
+<details>
+    <summary>Corentin le Magnanime<span class="tags">[C++] [SFML]</span></summary>
+    <p>
+        En 2018, là aussi pour fêter l'anniversaire d'un ami, avec des amis, nous avons créé un jeu à son effigie : <strong>Corentin le Magnanime</strong>.
+        Le jeu contient deux parties différentes, l'une étant un enchaînement de mini-jeux (à la <em>Wario Ware</em>),
+        l'autre étant un <em>bullet hell</em> (esquive d'un grand nombre de protectiles, à la <em>Touhou</em>).
+    </p><p>
+        Nous avons utilisé C++ et la SFML. Je me suis occupé du menu principal et de la partie <em>bullet hell</em>.
+        Les <em>bullet hell</em> étant un genre de jeu que j'apprécie particulièrement, cela a été un plaisir de
+        pouvoir en créer un par moi-même. Notamment, les mouvements des ennemis et des projectiles étant assez recherchés,
+        cela a demandé du travail pour paramétrer mathématiquement les trajectoires.
+    </p>
+    <figure>
+        <figcaption>Vidéo de démonstration</figcaption>
+        <video controls>
+            <source src="/common/assets/projects/corentin_magnanime.mp4" type="video/mp4">
+        </video>
+    </figure>
+</details>

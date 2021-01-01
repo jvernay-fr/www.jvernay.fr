@@ -1,0 +1,93 @@
+<a href="/fr/projets.html" class="big-link">[ Version française ]</a>
+
+<h1>Projects</h1>
+
+<p>
+    Click on the project titles to show details.
+</p>
+
+<details>
+    <summary>Crowd Control<span class="tags">[Game Jam] [Godot Engine]</span></summary>
+    <p>
+        In July 2020, I took part with two friends at the GMTK Game Jam, whose theme was <strong>Out of Control</strong>.
+        Our game entry is <strong>Crowd Control</strong>, playable in the browser at <a href="https://nitsugua.itch.io/crowd-control">itch.io</a>.
+        In this game, you must control the crowd so that it goes to the designated area.
+        To do so, you use your mouse, which has three actions:
+    </p><ul>
+        <li>Left click: to gather the crowd at the cursor center</li>
+        <li>Right click: to scatter the crowd to the cursor outsides</li>
+        <li>Wheel: modify the cursor radius</li>
+    </ul><p>
+        The game has been created with Godot Engine, and its scripting language GDScript.
+        In this project, I was in charge of programming the crowd.
+        The people follow a modified Boids simulation:
+        a bias is added for the cursor (which can gather or scatter the crowd),
+        and there are two categories of people (blond-haired and brown-haired) which are not influencing each other.
+        The arrival areas count the number of people inside, and trigger the end of the level
+        if the number of people corresponds.
+    </p>
+    <figure>
+        <figcaption>Demonstration</figcaption>
+        <video controls>
+            <source src="/common/assets/projects/crowd_control.mp4" type="video/mp4">
+        </video>
+    </figure>
+    <p>
+        Sources are available on <a href="https://github.com/arnette-thomas/gmtkjam20">GitHub</a>.
+    </p>
+</details>
+
+<details>
+    <summary>Thomas Chronicles<span class="tags">[C++] [SFML]</span></summary>
+    <p>
+        During 2019 summer vacations, and to celebrate a friend's birthday, I have created the game <strong>Thomas Chronicles</strong>.
+        It is a puzzle game greatly inspired by Professor Layton. Some puzzles have specific
+        <em>gameplay</em>, like a sliding puzzle for instance, while others simply ask to enter the answer.
+    </p><p>
+        The game was created entirely in C++ with SFML, and was debugged on Windows and GNU/Linux.
+        The objective was also to make a well-polished game, and I am pleased with the result.
+        Especially, there are numerous transitions: fading, sliding, etc.
+        Due to this, the code contains numerous state machines, if only the graphical part.
+    </p>
+    <figure>
+        <figcaption>Demonstration</figcaption>
+        <video controls>
+            <source src="/common/assets/projects/ThomasChronicles.mp4" type="video/mp4">
+        </video>
+    </figure>
+</details>
+
+<details>
+    <summary>Modi (QiOVA)<span class="tags">[C++] [Electronic]</span></summary>
+    <p>
+        During my internship at QiOVA, my job was to create an electronic circuit named Modi to test the QElec
+        (a product which QiOVA sells), easily and automatically. 
+        To do so, the circuit must measure the frequency of a digital signal, the voltage of an analog signal,
+        the length of a pulse... and it must be controllable using a serial link with an Arduino.
+        So I had to design the circuit, find and order the components, to program the Arduino Uno so it controls the
+        various components and accepts commands from the serial link, and to test the proper functioning of Modi.
+    </p>
+    <figure>
+        <figcaption></figcaption>
+        <img src="/common/assets/projects/modi.png" style="width: 100%"/>
+    </figure>
+</details>
+<details>
+    <summary>Corentin le Magnanime<span class="tags">[C++] [SFML]</span></summary>
+    <p>
+        In 2018, to celebrate a friend's birthday too, with friends we decided to create a game bearing his effigy.
+        The game contains two separate parts: the first being a mini-game sequence (like <em>Wario Ware</em>),
+        the second being a <em>bullet hell</em> (dodging numerous projectiles, like <em>Touhou</em>).
+    </p><p>
+        We used C++ and SFML. I was charged with the main menu and the <em>bullet hell</em> part.
+        <em>Bullet hell</em> is a game kind which I like, so it has been a great pleasure to create one by myself.
+        Notably, enemies and projectiles movements being refined, work was done to mathematically
+        parameterize the trajectories.
+    </p>
+    <figure>
+        <figcaption>Demonstration</figcaption>
+        <video controls>
+            <source src="/common/assets/projects/corentin_magnanime.mp4" type="video/mp4">
+        </video>
+    </figure>
+</details>
