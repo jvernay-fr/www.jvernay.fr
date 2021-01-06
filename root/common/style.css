@@ -125,3 +125,9 @@ summary {
     border-bottom: 1px solid var(--silver);
     padding-left: 3em;
 }
+
+blockquote {
+    background-color: #f0f0f0;
+    border-left: 3px solid var(--blue);
+    padding: 0 10px;
+}

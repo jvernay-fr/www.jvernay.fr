@@ -38,6 +38,38 @@
 </details>
 
 <details>
+    <summary>Ariane Simulator<span class="tags">[C++] [OpenCV] [Image Processing]</span></summary>
+    <p>
+        For a scholar project, with a colleague we created the game <strong>Ariane Simulator</strong>.
+        This is a first-person maze game in which we move using our head's orientation.
+        We detect several head positions which correspond to a movement in the game.
+    </p>
+    <figure>
+        <figcaption>Left - Neutral - Right / Up - Down</figcaption>
+        <img src="/common/assets/projects/ariane_pos.png" style="width: 80%"/>
+    </figure>
+    <p>
+        The project was done in C++ using Qt, OpenGL and OpenCV.
+        I was in charged with the image processing part. With OpenCV, I get the camera images.
+        Then I search for the face and the nose. The detection is based on using pre-trained Haar cascades.
+        However some modifications have been made to answer our application's needs.
+        The Haar cascade for the nose was trained for front face, but we also need to detect
+        the nose from the side, because the head's orientation will change.
+        Since we use a video stream, I use the correlation with a previous found nose
+        when the Haar cascade doesn't work.
+    </p>
+    <figure>
+        <figcaption>Demonstration</figcaption>
+        <video controls>
+            <source src="/common/assets/projects/ArianeSimulator.mp4" type="video/mp4" width="600" style="width: 100%">
+        </video>
+    </figure>
+    <p>
+        Sources are available on <a href="https://github.com/J-Vernay/Ariane-simulator-NX-move">GitHub</a>.
+    </p>
+</details>
+
+<details>
     <summary>Thomas Chronicles<span class="tags">[C++] [SFML]</span></summary>
     <p>
         During 2019 summer vacations, and to celebrate a friend's birthday, I have created the game <strong>Thomas Chronicles</strong>.

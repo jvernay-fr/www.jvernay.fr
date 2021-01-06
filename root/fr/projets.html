@@ -38,6 +38,37 @@
 </details>
 
 <details>
+    <summary>Ariane Simulator<span class="tags">[C++] [OpenCV] [Traitement d'image]</span></summary>
+    <p>
+        Pour un projet d'études, avec un collègue nous avons créé le jeu <strong>Ariane Simulator</strong>.
+        Il s'agit d'un jeu de labyrinthe à la première personne où l'on se déplace en faisant varier l'orientation de sa tête.
+        En effet, on détecte plusieurs positions de tête qui correspondent à un mouvement dans le jeu.
+    </p>
+    <figure>
+        <img src="/common/assets/projects/ariane_pos.png" style="width: 80%"/>
+    </figure>
+    <p>
+        Le projet a été fait en C++ en utilisant Qt, OpenGL et OpenCV.
+        Je me suis occupé de la partie traitement d'images. Avec OpenCV, je récupère les images de la caméra.
+        Puis je recherche le visage et le nez. La base de la détection est d'utiliser des cascades de Haar pré-entrainées.
+        Cependant quelques modifications ont dû être faite pour répondre aux besoins de notre application.
+        La cascade de Haar pour le nez est entraîné sur des visages de face. Or, nous avons aussi besoin de
+        détecter le nez vu de côté, puisque l'orientation du visage va changer.
+        Puisque nous utilisons un flux vidéo, j'utilise la corrélation avec un nez précédemment trouvé
+        dans le cas où la cascade de Haar ne fonctionne pas.
+    </p>
+    <figure>
+        <figcaption>Vidéo de démonstration</figcaption>
+        <video controls>
+            <source src="/common/assets/projects/ArianeSimulator.mp4" type="video/mp4" width="600" style="width: 100%">
+        </video>
+    </figure>
+    <p>
+        Les sources sont disponibles sur <a href="https://github.com/J-Vernay/Ariane-simulator-NX-move">GitHub</a>.
+    </p>
+</details>
+
+<details>
     <summary>Thomas Chronicles<span class="tags">[C++] [SFML]</span></summary>
     <p>
         Pendant les vacances d'été 2019, et pour fêter l'anniversaire d'un ami, j'ai créé le jeu <strong>Thomas Chronicles</strong>.
@@ -68,7 +99,6 @@
         et qu'elle accepte des commandes via la liaison série, et tester le bon fonctionnement du circuit.
     </p>
     <figure>
-        <figcaption></figcaption>
         <img src="/common/assets/projects/modi.png" style="width: 100%"/>
     </figure>
 </details>
