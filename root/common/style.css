@@ -131,3 +131,12 @@ blockquote {
     border-left: 3px solid var(--blue);
     padding: 0 10px;
 }
+
+footer {
+    color: var(--gray);
+    max-width: 800px;
+    margin: auto;
+    text-align: center;
+    border-top: 1px solid var(--gray);
+    padding-top: 20px;
+}

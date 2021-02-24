@@ -4,6 +4,7 @@
         </main>
     
         <footer>
+            Vous voulez me contacter ? Envoyez-moi un mail à <em>cont<span style="display:none">anti-bot</span>act@<span style="display:none">anti-bot</span>jvern<span style="display:none">anti-bot</span>ay.fr</em> .
         </footer>
         
         <script>
