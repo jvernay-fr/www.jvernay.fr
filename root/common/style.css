@@ -132,6 +132,17 @@ blockquote {
     padding: 0 10px;
 }
 
+dt, dd {
+    display: inline-block;
+}
+dt {
+    width: 10%;
+    font-weight: bold;
+}
+dd {
+    min-width: 85%;
+}
+
 footer {
     color: var(--gray);
     max-width: 800px;

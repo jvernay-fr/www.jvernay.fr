@@ -15,7 +15,7 @@
     margin-left: 20px;
     display: flex;
     border-left: var(--timeline-border-width) solid var(--timeline-color);
-    padding: 2rem 0 0 2rem;
+    padding: 1rem 0 0 2rem;
 }
 .timeline > div:before {
     border: var(--timeline-border-width) solid var(--timeline-color);
@@ -40,11 +40,11 @@
 .timeline time {
     font-style: italic;
 }
-.timeline > div > section > h3 {
+.timeline > div  section h3 {
     margin: 0;
 }
 
-.timeline > div > section > *:not(h3) {
+.timeline > div  section  *:not(h3) {
     color: var(--gray);
     font-size: 1.2rem;
 }
