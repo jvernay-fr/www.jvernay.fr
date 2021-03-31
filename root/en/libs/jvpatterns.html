@@ -9,19 +9,20 @@
     It will present the core concepts of this library and how to use it.
     As an example, we will create an HTTP message parser.
     This library is hosted on <a href="https://github.com/J-Vernay/jvpatterns">GitHub</a>.
+    It is licensed under the Boost Software License.
 </p>
 
 <h2>Presentation</h2>
 <p>
     In <code>jvpatterns</code>, the main concept is <code>Pattern</code>.
     It is an augmented function object that, given a range, tries to match a subrange of it.
-    They can be checked by calling:
+    It can be checked by calling <code>match(...)</code> :
 </p>
 <pre><code class="cpp">template&lt;typename Pattern, typename FwdIt&gt;
 auto match(Pattern const& pattern, FwdIt begin, FwdIt end) -> std::optional&lt;FwdIt&gt;;
 </code></pre>
 <p>
-    <code>match</code> will try to match <code>pattern</code> at the start of <code>[begin;end[</code>.
+    It will try to match <code>pattern</code> at the start of <code>[begin;end[</code>.
     If it matches, it will return an iterator <code>iter</code> to the end of the match.
     The match is then <code>[begin;iter[</code>. Else, it will return <code>std::nullopt</code>.
     It works with any ForwardIterator.
@@ -36,7 +37,7 @@ auto match(Pattern const& pattern, FwdIt begin, FwdIt end) -> std::optional&lt;F
     <li><code>equal{ my_range }</code> matches the given range.</li>
     <li><code>any_of{ my_range }</code> matches any element of the given range.</li>
     <li><code>none_of{ my_range }</code> matches any element NOT in the given range.</li>
-    <li><code>predicate{ my_func }</code> matches depending on the evaluation of <code>my_func(begin,end)</code>.</li>
+    <li><code>predicate{ my_func }</code> matches depending on the evaluation of <code>my_func(begin,end) -> optional&lt;FwdIt&gt;</code>.</li>
     <li><code>predicate_elem{ my_func }</code> matches an element such that <code>my_func(elem) == true</code>.</li>
     <li><code>"my_literal"_p</code> is equivalent to <code>equal&lt;string_view&gt;{"my_literal"}</code>.</li>
 </ul>
@@ -45,7 +46,7 @@ auto match(Pattern const& pattern, FwdIt begin, FwdIt end) -> std::optional&lt;F
 </p>
 <ul>
     <li><code>sequence{p1, p2, p3}</code> matches all patterns in the given order.</li>
-    <li><code>alternative{p1, p2, p3}</code> matches one of a pattern (the first that does match).</li>
+    <li><code>alternative{p1, p2, p3}</code> matches one of a pattern (tried in order).</li>
     <li><code>repetition{p, N}</code> matches <code>N</code> repetitions of a pattern.</li>
     <li><code>repetition{p, min, max}</code> matches between <code>min</code> and <code>max</code> repetitions of a pattern.</li>
     <li><code>until{p}</code> matches a range of elements, which is followed next by <code>p</code>.</li>
@@ -173,7 +174,7 @@ auto httpVersion = "HTTP/"_p + digit.tag("major") + "."_p + digit.tag("minor");
 template&lt;typename Pattern, typename FwdIt&gt;
 void HttpVisitor::operator()(Pattern const& p, FwdIt begin, FwdIt end) {
     // NOTE: if 'p' is untagged, 'p.get_tag()' returns void.
-    if constexpr (std::is_same_v&lt;typename Pattern::tag_type, char const*&gt;) {
+    if constexpr (std::is_convertible_v&lt;typename Pattern::tag_type, char const*&gt;) {
         char const* tag = p.get_tag();
         if (std::strcmp(tag, "major") == 0) this->major = *begin - '0';
         else if (std::strcmp(tag, "minor") == 0) this->minor = *begin -'0';
@@ -183,7 +184,8 @@ void HttpVisitor::operator()(Pattern const& p, FwdIt begin, FwdIt end) {
 
 
 // Second method: every tagged pattern has a different type, dispatch is done at compile-time.
-auto httpVersion = "HTTP/"_p + digit.tag&lt;struct TagMajor*&gt;() + "."_p + digit.tag&lt;struct TagMinor*&gt;();
+struct TagMajor; struct TagMinor;
+auto httpVersion = "HTTP/"_p + digit.tag&lt;TagMajor*&gt;() + "."_p + digit.tag&lt;TagMinor*&gt;();
 
 template&lt;typename Pattern, typename FwdIt&gt;
 void HttpVisitor::operator()(Pattern const& p, FwdIt begin, FwdIt end) {
@@ -215,18 +217,18 @@ struct TagBody;
 
 // This will match an individual upper letter.
 auto upperLetter = jvpatterns::predicate_elem{ [](auto elem) {
-	return elem >= 'A' && elem <= 'Z';
+    return elem >= 'A' && elem <= 'Z';
 } };
 // This will match an individual digit.
 auto digit = jvpatterns::any_of&lt;std::string_view&gt;{ "0123456789" };
 
 auto httpVersion = "HTTP/"_p + digit.tag&lt;TagMajor*&gt;() + "."_p + digit.tag&lt;TagMinor*&gt;();
 auto requestLine = (upperLetter.repeat(1, 100).tag&lt;TagMethod*&gt;() + " "_p
-	+ until{ " "_p }.tag&lt;TagTarget*&gt;() + " "_p + httpVersion + "\r\n"_p
-	).tag&lt;TagRequest*&gt;();
+                     + until{ " "_p }.tag&lt;TagTarget*&gt;() + " "_p + httpVersion + "\r\n"_p
+                   ).tag&lt;TagRequest*&gt;();
 auto responseLine = (httpVersion + " "_p + digit[3].tag&lt;TagStatusCode*&gt;() + " "_p
-	+ until{ "\r\n"_p }.tag&lt;TagStatusMessage*&gt;() + "\r\n"_p
-	).tag&lt;TagResponse*&gt;();
+                      + until{ "\r\n"_p }.tag&lt;TagStatusMessage*&gt;() + "\r\n"_p
+                    ).tag&lt;TagResponse*&gt;();
 auto startLine = requestLine | responseLine;
 
 auto headerName = until{ ":"_p }.tag&lt;TagHeaderName*&gt;();
@@ -304,14 +306,14 @@ void HttpVisitor::operator()(Pattern const& p, FwdIt begin, FwdIt end) {
         minor = *begin - '0';
         
     if constexpr (std::is_same_v&lt;typename Pattern::tag_type, TagMethod*&gt;)
-        get&lt;Request&gt;(info).method = std::string{begin, end};
+        std::get&lt;Request&gt;(info).method = std::string{begin, end};
     if constexpr (std::is_same_v&lt;typename Pattern::tag_type, TagTarget*&gt;)
-        get&lt;Request&gt;(info).target = std::string{begin, end};
+        std::get&lt;Request&gt;(info).target = std::string{begin, end};
         
     if constexpr (std::is_same_v&lt;typename Pattern::tag_type, TagStatusCode*&gt;)
-        get&lt;Response&gt;(info).status_code = std::string{begin, end};
+        std::get&lt;Response&gt;(info).status_code = std::string{begin, end};
     if constexpr (std::is_same_v&lt;typename Pattern::tag_type, TagStatusMessage*&gt;)
-        get&lt;Response&gt;(info).status_message = std::string{begin, end};
+        std::get&lt;Response&gt;(info).status_message = std::string{begin, end};
         
     if constexpr (std::is_same_v&lt;typename Pattern::tag_type, TagHeaderName*&gt;)
         _tmp_header_name = std::string{begin, end};
@@ -319,6 +321,9 @@ void HttpVisitor::operator()(Pattern const& p, FwdIt begin, FwdIt end) {
         _tmp_header_value = std::string{begin, end};
     if constexpr (std::is_same_v&lt;typename Pattern::tag_type, TagHeader*&gt;)
         headers.emplace(std::move(_tmp_header_name), std::move(_tmp_header_value));
+        
+    if constexpr (std::is_same_v&lt;typename Pattern::tag_type, TagBody*&gt;)
+        body = std::string{ begin,end };
 }
 </code></pre>
 <p>
