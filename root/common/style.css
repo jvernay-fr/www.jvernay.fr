@@ -132,6 +132,9 @@ blockquote {
     padding: 0 10px;
 }
 
+pre, code { background-color: #fafafa; }
+pre { padding: 10px; }
+
 dt, dd {
     display: inline-block;
 }

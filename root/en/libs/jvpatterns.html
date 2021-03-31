@@ -1,0 +1,406 @@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.1/styles/atom-one-light.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.1/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+<h1>jvpatterns</h1>
+
+<p>
+    This post is about <code>jvpatterns</code>, a C++17 template library for pattern matching.
+    It will present the core concepts of this library and how to use it.
+    As an example, we will create an HTTP message parser.
+    This library is hosted on <a href="https://github.com/J-Vernay/jvpatterns">GitHub</a>.
+</p>
+
+<h2>Presentation</h2>
+<p>
+    In <code>jvpatterns</code>, the main concept is <code>Pattern</code>.
+    It is an augmented function object that, given a range, tries to match a subrange of it.
+    They can be checked by calling:
+</p>
+<pre><code class="cpp">template&lt;typename Pattern, typename FwdIt&gt;
+auto match(Pattern const& pattern, FwdIt begin, FwdIt end) -> std::optional&lt;FwdIt&gt;;
+</code></pre>
+<p>
+    <code>match</code> will try to match <code>pattern</code> at the start of <code>[begin;end[</code>.
+    If it matches, it will return an iterator <code>iter</code> to the end of the match.
+    The match is then <code>[begin;iter[</code>. Else, it will return <code>std::nullopt</code>.
+    It works with any ForwardIterator.
+</p>
+<p>
+    <code>jvpatterns</code> provides three features which make it useful:
+</p>
+<p>
+    The first one is <strong>common terminal patterns</strong>:
+</p>
+<ul>
+    <li><code>equal{ my_range }</code> matches the given range.</li>
+    <li><code>any_of{ my_range }</code> matches any element of the given range.</li>
+    <li><code>none_of{ my_range }</code> matches any element NOT in the given range.</li>
+    <li><code>predicate{ my_func }</code> matches depending on the evaluation of <code>my_func(begin,end)</code>.</li>
+    <li><code>predicate_elem{ my_func }</code> matches an element such that <code>my_func(elem) == true</code>.</li>
+    <li><code>"my_literal"_p</code> is equivalent to <code>equal&lt;string_view&gt;{"my_literal"}</code>.</li>
+</ul>
+<p>
+    The second one is <strong>composition</strong>:
+</p>
+<ul>
+    <li><code>sequence{p1, p2, p3}</code> matches all patterns in the given order.</li>
+    <li><code>alternative{p1, p2, p3}</code> matches one of a pattern (the first that does match).</li>
+    <li><code>repetition{p, N}</code> matches <code>N</code> repetitions of a pattern.</li>
+    <li><code>repetition{p, min, max}</code> matches between <code>min</code> and <code>max</code> repetitions of a pattern.</li>
+    <li><code>until{p}</code> matches a range of elements, which is followed next by <code>p</code>.</li>
+    <br/>
+    <li><code>p1 + p2 + p3</code> is equivalent to <code>sequence{p1, p2, p3}</code>.</li>
+    <li><code>p1 | p2 | p3</code> is equivalent to <code>alternative{p1, p2, p3}</code>.</li>
+    <li><code>p[N]</code> is equivalent to <code>repetition{p, N}</code>.</li>
+    <li><code>p.repeat(min, max)</code> is equivalent to <code>repetition{p, min, max}</code>.</li>
+</ul>
+<p>
+    The third one is <strong>visitability</strong>.
+    Actually, <code>match()</code> accepts a fourth argument, which must be a function object.
+    It must be callable with the arguments <code>(Pattern const&, FwdIt begin, FwdIt end)</code>.
+    It will be called for each match and submatch that succeeded.
+    Moreover, <code>match()</code> can be customized through ADL (like <code>swap()</code>).
+    Patterns can be distinguished by tagging them with an arbitrary value of an arbitrary type
+    (<code>p.tag("Hello")</code> then <code>p.get_tag()</code> for instance).
+</p>
+<p>
+    The first two features are the basis for testing a pattern against an input,
+    and the third feature is required to allow inspection and parsing.
+    In the rest of this article, we make use of these features to create an HTTP message parser.
+</p>
+
+<h2>HTTP message overview</h2>
+<p>
+    HTTP messages are in two kinds: requests (made by clients, typically the user browser),
+    and responses (made by servers). Here is an example taken from
+    <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages">Mozilla documentation</a>.
+</p>
+<img src="/common/assets/jvpatterns/httpmsg.png" alt="Example of an HTTP request and response"/>
+
+<p>
+    The parser will be a simple one, which retrieves the following information (examples in parenthesis):
+</p>
+<ul>
+    <li>HTTP Version (<code>1.1</code>)</li>
+    <li>For requests: method (<code>POST</code>) and target (<code>/index.html</code>)</li>
+    <li>For responses: status code (<code>404</code>) and message (<code>Not Found</code>)</li>
+    <li>A list of headers, each one having a name (<code>Connection</code>) and a value (<code>keep-alive</code>)</li>
+    <li>The body, potentially empty(<code>&lt;!DOCTYPE HTML&gt;&lt;html&gt;...&lt;/html&gt;</code>)</li>
+</ul>
+<p>
+    In HTTP, each line ends with <code>\r\n</code>. We will support only one-line headers.
+    We will only extract the data, but validation is out of scope (i.e. does this status code exists?).
+</p>
+
+<h2>Global structure of HTTP</h2>
+<p>
+    The global structure of HTTP is easily translated into patterns.
+</p>
+<pre><code class="cpp">#include "jvpatterns.hpp"
+using jvpatterns::until;
+using jvpatterns::operator""_p;
+
+// This will match an individual upper letter.
+auto upperLetter = jvpatterns::predicate_elem{ [](auto elem) {
+	return elem >= 'A' && elem <= 'Z';
+} };
+// This will match an individual digit.
+auto digit = jvpatterns::any_of&lt;std::string_view&gt;{"0123456789"};
+
+auto httpVersion = "HTTP/"_p + digit + "."_p + digit;
+auto requestLine = upperLetter.repeat(1,100) + " "_p + until{" "_p} + " "_p + httpVersion + "\r\n"_p;
+auto responseLine = httpVersion + " "_p + digit[3] + " "_p + until{"\r\n"_p} + "\r\n"_p;
+auto startLine = requestLine | responseLine;
+
+auto headerName = until{":"_p};
+auto headerValue = until{"\r\n"_p};
+auto header = headerName + " "_p.repeat(0,100) + headerValue + "\r\n"_p;
+
+// This will match the the rest of the message, which is the body.
+auto body = jvpatterns::predicate{ [](auto it, auto end) { return std::optional{end}; } };
+
+auto httpMessage = startLine + header.repeat(0,100) + "\r\n"_p + body;
+</code></pre>
+<p>
+    With our previous definitions, we can now check if an HTTP message is correctly formed.
+    We just need to call <code>match(httpMessage, begin, end)</code>.
+    This will provide a Yes/No answer to <q>Is it an HTTP message?</q>, which is a good start
+    but not enough to be useful.
+</p>
+
+<h2>Extracting the HTTP version</h2>
+<p>
+    As a first example, let's only extract the HTTP version.
+    Our visitor will be responsible for storing extracted data.
+</p>
+<pre><code class="cpp">class HttpVisitor {
+    int major = 0; int minor = 0;
+    
+    template&lt;typename Pattern, typename FwdIt&gt;
+    void operator()(Pattern const& p, FwdIt begin, FwdIt end) {}
+};
+</code></pre>
+<p>
+    There is two ways to customize the matching behaviour.
+</p>
+<pre><code class="cpp">// First method: using HttpVisitor::operator()
+// drawback: you can only do something AFTER the match.
+template&lt;typename Pattern, typename FwdIt&gt;
+void HttpVisitor::operator()(Pattern const& p, FwdIt begin, FwdIt end) {
+    // do something, knowing that 'p' has matched [begin;end[
+}
+
+// Second method: using ADL resolution for match()
+// advantage: you can ensure preconditions and postconditions.
+template&lt;typename Pattern, typename FwdIt&gt;
+std::optional&lt;FwdIt&gt; match(Pattern const& p, FwdIt begin, FwdIt end, MyVisitor& visitor) {
+    // do something, before knowing whether 'p' will match something.
+    auto result = p(begin, end, visitor);
+    if (result) {} // do something, knowing 'p' has matched [begin;*result[
+    else {} // do something, knowing 'p' has not matched anything
+    return result;
+}
+</code></pre>
+<p>
+    In either case, we will need to distinguish the major and minor patterns from the other patterns.
+    This is done by tagging patterns with an arbitrary value of an arbitrary type:
+</p>
+<pre><code class="cpp">// First method: every tagged pattern has the same type, dispatch is done at runtime.
+auto httpVersion = "HTTP/"_p + digit.tag("major") + "."_p + digit.tag("minor");
+
+// Also works in match(...), by replacing 'this->major' by 'visitor.major'.
+template&lt;typename Pattern, typename FwdIt&gt;
+void HttpVisitor::operator()(Pattern const& p, FwdIt begin, FwdIt end) {
+    // NOTE: if 'p' is untagged, 'p.get_tag()' returns void.
+    if constexpr (std::is_same_v&lt;typename Pattern::tag_type, char const*&gt;) {
+        char const* tag = p.get_tag();
+        if (std::strcmp(tag, "major") == 0) this->major = *begin - '0';
+        else if (std::strcmp(tag, "minor") == 0) this->minor = *begin -'0';
+        // cases for other tags
+    }
+}
+
+
+// Second method: every tagged pattern has a different type, dispatch is done at compile-time.
+auto httpVersion = "HTTP/"_p + digit.tag&lt;struct TagMajor*&gt;() + "."_p + digit.tag&lt;struct TagMinor*&gt;();
+
+template&lt;typename Pattern, typename FwdIt&gt;
+void HttpVisitor::operator()(Pattern const& p, FwdIt begin, FwdIt end) {
+    if constexpr (std::is_same_v&lt;typename Pattern::tag_type, TagMajor*&gt;)
+        this->major = *begin - '0';
+    if constexpr (std::is_same_v&lt;typename Pattern::tag_type, TagMinor*&gt;)
+        this->minor = *begin - '0';
+}
+</code></pre>
+<p>
+    In our case, we will go with the second method, that is, dispatching at compile-time.
+</p>
+
+<h2>Preparing the parsing</h2>
+<p>
+    We need to adjust the definitions of our patterns to add tags.
+</p>
+
+<pre><code class="cpp">#include "jvpatterns.hpp"
+using jvpatterns::until;
+using jvpatterns::operator""_p;
+
+// Tags
+struct TagMajor; struct TagMinor;
+struct TagMethod; struct TagTarget; struct TagRequest;
+struct TagStatusCode; struct TagStatusMessage; struct TagResponse;
+struct TagHeaderName; struct TagHeaderValue; struct TagHeader;
+struct TagBody;
+
+// This will match an individual upper letter.
+auto upperLetter = jvpatterns::predicate_elem{ [](auto elem) {
+	return elem >= 'A' && elem <= 'Z';
+} };
+// This will match an individual digit.
+auto digit = jvpatterns::any_of&lt;std::string_view&gt;{ "0123456789" };
+
+auto httpVersion = "HTTP/"_p + digit.tag&lt;TagMajor*&gt;() + "."_p + digit.tag&lt;TagMinor*&gt;();
+auto requestLine = (upperLetter.repeat(1, 100).tag&lt;TagMethod*&gt;() + " "_p
+	+ until{ " "_p }.tag&lt;TagTarget*&gt;() + " "_p + httpVersion + "\r\n"_p
+	).tag&lt;TagRequest*&gt;();
+auto responseLine = (httpVersion + " "_p + digit[3].tag&lt;TagStatusCode*&gt;() + " "_p
+	+ until{ "\r\n"_p }.tag&lt;TagStatusMessage*&gt;() + "\r\n"_p
+	).tag&lt;TagResponse*&gt;();
+auto startLine = requestLine | responseLine;
+
+auto headerName = until{ ":"_p }.tag&lt;TagHeaderName*&gt;();
+auto headerValue = until{ "\r\n"_p }.tag&lt;TagHeaderValue*&gt;();
+auto header = (headerName + ":"_p + " "_p.repeat(0, 100) + headerValue + "\r\n"_p).tag&lt;TagHeader*&gt;();
+
+// This will match the the rest of the message, which is the body.
+auto body =
+	jvpatterns::predicate{ [](auto it, auto end) { return std::optional{end}; } }.tag&lt;TagBody*&gt;();
+
+auto httpMessage = startLine + header.repeat(0, 100) + "\r\n"_p + body;
+</code></pre>
+<p>
+    We also need to change our <code>HttpVisitor</code> so it can store the extracted data:
+</p>
+<pre><code class="cpp">#include &lt;map&gt;
+#include &lt;variant&gt;
+#include &lt;string&gt;
+
+struct Request { std::string method, target; };
+struct Response { std::string status_code, status_message; };
+
+struct HttpVisitor {
+    int major = 0, minor = 0;
+    std::variant&lt;Request, Response&gt; info;
+    std::map&lt;std::string, std::string&gt; headers;
+    std::string body;
+    
+    template&lt;typename Pattern, typename FwdIt&gt;
+    void operator()(Pattern const& p, FwdIt begin, FwdIt end);
+    
+    // used for operator(), explained later
+    std::string _tmp_header_name;
+    std::string _tmp_header_value;
+};
+</code></pre>
+
+<h2>Actual parsing</h2>
+<p>
+    Finally, we need to visit our tagged types and update our visitor's state.
+    Before showing the actual code, something to remember:
+    Subpatterns will be visited even if their parent are not matched.
+    For example, we can match <code>headerName</code> without matching <code>headerValue</code> next
+    (however, matching <code>headerValue</code> without <code>headerName</code> is impossible).
+    So until we are sure we want to push a value, we need to store it in a reversible location.
+    This is the objective of <code>_tmp_header_name</code> and <code>_tmp_header_value</code>.
+</p>
+<pre><code class="cpp">// For TagMethod and TagTarget, we must ensure that visitor.info holds the alternative Request.
+// The same applies for TagStatusCode, TagStatusMessage and Response.
+// This is a precondition (before TagRequest and TagResponse being actually matched).
+// So it requires to use ADL technique by overloading match(...).
+// We want to only overload match(...) for TagRequest and TagResponse:
+
+template&lt;typename P, typename FwdIt&gt;
+std::optional&lt;FwdIt&gt; match(jvpatterns::tagged_pattern&lt;P, TagRequest*> const& pattern,
+                           FwdIt begin, FwdIt end, HttpVisitor& visitor) {
+    // only for TagRequest
+    visitor.info = Request{};
+    return pattern(begin, end, visitor);
+}
+template&lt;typename P, typename FwdIt&gt;
+std::optional&lt;FwdIt&gt; match(jvpatterns::tagged_pattern&lt;P, TagResponse*> const& pattern,
+                           FwdIt begin, FwdIt end, HttpVisitor& visitor) {
+    // only for TagResponse
+    visitor.info = Response{};
+    return pattern(begin, end, visitor);
+}
+
+// Other tagged patterns only need to save their matches, so we can do it with operator().
+template&lt;typename Pattern, typename FwdIt&gt;
+void HttpVisitor::operator()(Pattern const& p, FwdIt begin, FwdIt end) {
+    if constexpr (std::is_same_v&lt;typename Pattern::tag_type, TagMajor*&gt;)
+        major = *begin - '0';
+    if constexpr (std::is_same_v&lt;typename Pattern::tag_type, TagMinor*&gt;)
+        minor = *begin - '0';
+        
+    if constexpr (std::is_same_v&lt;typename Pattern::tag_type, TagMethod*&gt;)
+        get&lt;Request&gt;(info).method = std::string{begin, end};
+    if constexpr (std::is_same_v&lt;typename Pattern::tag_type, TagTarget*&gt;)
+        get&lt;Request&gt;(info).target = std::string{begin, end};
+        
+    if constexpr (std::is_same_v&lt;typename Pattern::tag_type, TagStatusCode*&gt;)
+        get&lt;Response&gt;(info).status_code = std::string{begin, end};
+    if constexpr (std::is_same_v&lt;typename Pattern::tag_type, TagStatusMessage*&gt;)
+        get&lt;Response&gt;(info).status_message = std::string{begin, end};
+        
+    if constexpr (std::is_same_v&lt;typename Pattern::tag_type, TagHeaderName*&gt;)
+        _tmp_header_name = std::string{begin, end};
+    if constexpr (std::is_same_v&lt;typename Pattern::tag_type, TagHeaderValue*&gt;)
+        _tmp_header_value = std::string{begin, end};
+    if constexpr (std::is_same_v&lt;typename Pattern::tag_type, TagHeader*&gt;)
+        headers.emplace(std::move(_tmp_header_name), std::move(_tmp_header_value));
+}
+</code></pre>
+<p>
+    Now, to use our parser, we only need to run <code>match(...)</code> with our visitor:
+</p>
+<pre><code class="cpp">
+HttpVisitor visitor;
+auto result = match(httpMessage, input.begin(), input.end(), visitor);
+if (result) {
+    // success, can use visitor.headers, visitor.body, etc
+} else {
+    // failure
+}
+</code></pre>
+<h2>Demonstration</h2>
+<p>
+    All the code is merged into a
+    <a href="https://github.com/J-Vernay/jvpatterns/blob/main/examples/example-http/main.cpp">single file</a>,
+    and a printing function was added.
+    The result of the execution is below. We can see that everything works just fine.
+</p>
+<pre style="height: 600px; overflow-y: scroll;">
+====================================================================
+GET /hello.html HTTP/1.1
+Host: localhost:8000
+Connection: keep-alive
+Accept: text/html
+
+===============
+Has matched? YES
+HTTP Version: 1.1
+Type: Request
+Method: GET
+Target: /hello.html
+Headers: 
+- Accept = text/html
+- Connection = keep-alive
+- Host = localhost:8000
+Body: 
+====================================================================
+HTTP/1.1 200 OK
+Connection: Keep-Alive
+Content-Type:text/html
+Content-Length:      22
+
+&lt;h1&gt;Hello World!&lt;/h1&gt;
+===============
+Has matched? YES
+HTTP Version: 1.1
+Type: Response
+Code: 200
+Message: OK
+Headers: 
+- Connection = Keep-Alive
+- Content-Length = 22
+- Content-Type = text/html
+Body: &lt;h1&gt;Hello World!&lt;/h1&gt;
+
+====================================================================
+GET / HTTP/1.0
+
+===============
+Has matched? YES
+HTTP Version: 1.0
+Type: Request
+Method: GET
+Target: /
+Headers: 
+Body: 
+====================================================================
+HTTP/1.0 2000 Invalid Status - Error intended
+
+===============
+Has matched? NO
+
+</pre>
+<h2>Conclusion</h2>
+<p>
+    I have not presented it in this post, but creating patterns and meta-patterns is pretty straight-forward.
+    You can see the implementation of <code>any_of</code> and <code>repetition</code>.
+    For instance, we could create a meta-pattern which calls a function when a pattern is not matched,
+    so error handling is also done while matching.
+    To conclude, I would remind that the implementation is available on
+    <a href="https://github.com/J-Vernay/jvpatterns">GitHub</a> under the permissive Boost Software License.
+</p>
