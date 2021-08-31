@@ -7,9 +7,86 @@
 </p>
 
 <details>
+    <summary>jvWhiteboard<span class="tags">[Javascript] [WebRTC] [Python]</span></summary>
+    <p>
+        Afin d'expérimenter avec les WebRTC (technologie peer-to-peer pour le Web), j'ai créé une
+        application de réunion à distance nommée <strong>jvWhiteboard</strong>, accessible
+        <a href="https://experiments.jvernay.fr/whiteboard/fr/">sur mon site</a>.
+    </p>
+    <p>
+        Un utilisateur peut créer une salle de réunion. Un ID lui est donné, qu'il peut
+        partager à d'autres utilisateurs afin de rejoindre cette salle de réunion.
+        Une fois que les utilisateurs rejoignent la réunion, ils peuvent diffuser leur caméra et audio,
+        discuter textuellement, partager des fichiers et dessiner de façon collaborative.
+        Hormis la création et la connexion aux salles (qui nécessite un serveur de signaling), toutes
+        les interactions entre utilisateurs sont en peer-to-peer avec WebRTC (donc cryptées).
+    </p>
+    <p>
+        Pour réaliser ce projet, j'ai utilisé les technologies standards HTML5/CSS3/Javascript,
+        sans framework. J'ai utilisé deux bibliothèques externes (SVG.js et saveSvgAsPng.js) qui
+        m'ont évité la manipulation directe des dessins. J'ai implémenté le reste du frontend
+        (signaling avec Websockets, caméras, synchronisation du dessin, discussion, partage de fichiers, etc)
+        par moi-même directement depuis les APIs standard du Web.
+    </p>
+    <p>
+        Pour la partie backend, j'utilise un serveur scripté en Python avec la bibliothèque websockets,
+        qui s'occupe de garder une connexion avec tous les utilisateurs d'une salle et de transmettre
+        les négociations entre utilisateurs (quelle IP utiliser pour joindre les autres,
+        quel codec pour envoyer la vidéo, etc).
+    </p>
+    <figure>
+        <figcaption>Vidéo de démonstration</figcaption>
+        <video controls width="80%">
+            <source src="/common/assets/projects/jvWhiteboard.mp4" type="video/mp4">
+        </video>
+    </figure>
+    <p>
+        Les sources sont disponibles en AGPL sur <a href="https://github.com/jvernay-fr/experiments.jvernay.fr">GitHub</a>.
+    </p>
+</details>
+
+<details>
+    <summary>Figée dans le passé<span class="tags">[Game Jam] [Godot Engine]</span></summary>
+    <p>
+        J'ai participé avec un ami à la WonderJam UQAC 2021, une Game Jam organisée par l'Université du
+        Québec À Chicoutimi, et propulsée par Ubisoft Saguenay.
+        Le thème était <strong>Résistance</strong>, et nous avions trois contraintes de gameplay:
+        <em>Arcade, Versus, Physics-based</em>.
+        Nous avons créé <strong>Figée dans le passé</strong>, jouable dans le navigateur sur <a href="https://julien-vernay.itch.io/figee-dans-le-passe">itch.io</a>.
+        L'objectif est de s'enfuir le plus vite possible, dans un puzzle-platformer 2D basé sur la physique.
+        Hormis sauter, deux actions sont disponibles : frapper des boîtes pour les projeter, et
+        figer les boîtes que l'on vient de projeter.
+    </p><p>
+        Le jeu a été créé avec Godot Engine, et son langage de script GDScript.
+        Nous étions deux, et nous avons chacun participé à tous les aspects: déplacements du personnage,
+        la physique, le mode deux joueurs, le level design, etc. Les musiques et les graphismes
+        proviennent d'ailleurs (cf. CREDITS.txt dans les sources).
+    </p>
+    <figure>
+        <figcaption>Vidéo de démonstration</figcaption>
+        <video controls width="80%">
+            <source src="/common/assets/projects/figee.mp4" type="video/mp4">
+        </video>
+    </figure>
+    <p>
+        Les sources sont disponibles sur <a href="https://github.com/J-Vernay/wonderjam-hiver2021">GitHub</a>.
+    </p>
+</details>
+
+<details>
+    <summary>Simulation de systèmes - Ascenseurs<span class="tags">[Simulation] [Javascript]</span></summary>
+    <p>
+        Durant mes cours de simulation de systèmes à l'UQAC, j'ai dû créer une simulation afin de
+        répondre à la question: <q>Quelles seraient les répercussions de l'ajout d'un troisième ascenseur
+        dans un bâtiment à 7 étages ?</q> J'ai développé une simulation afin d'observer ces répercussions.
+        Plus d'informations sont disponibles sur <a href="/fr/simu-proj/">la page de la simulation</a>.
+    </p>
+</details>s
+
+<details>
     <summary>Crowd Control<span class="tags">[Game Jam] [Godot Engine]</span></summary>
     <p>
-        En juillet 2020, j'ai participé avec deux amis à la Game Jam GMTK, dont le thème étant <strong>Out of Control</strong>.
+        En juillet 2020, j'ai participé avec deux amis à la Game Jam GMTK, dont le thème était <strong>Out of Control</strong>.
         Le jeu en résultant est <strong>Crowd Control</strong>, jouable dans le navigateur sur <a href="https://nitsugua.itch.io/crowd-control">itch.io</a>.
         Dans ce jeu, vous devez contrôler la foule afin qu'elle aille sur la zone qui lui est désignée.
         Pour cela, vous utilisez votre souris, qui possède trois actions :
@@ -28,7 +105,7 @@
     </p>
     <figure>
         <figcaption>Vidéo de démonstration</figcaption>
-        <video controls>
+        <video controls width="80%">
             <source src="/common/assets/projects/crowd_control.mp4" type="video/mp4">
         </video>
     </figure>
@@ -59,7 +136,7 @@
     </p>
     <figure>
         <figcaption>Vidéo de démonstration</figcaption>
-        <video controls>
+        <video controls width="80%">
             <source src="/common/assets/projects/ArianeSimulator.mp4" type="video/mp4" width="600" style="width: 100%">
         </video>
     </figure>
@@ -82,7 +159,7 @@
     </p>
     <figure>
         <figcaption>Vidéo de démonstration</figcaption>
-        <video controls>
+        <video controls width="80%">
             <source src="/common/assets/projects/ThomasChronicles.mp4" type="video/mp4">
         </video>
     </figure>
@@ -99,7 +176,7 @@
         et qu'elle accepte des commandes via la liaison série, et tester le bon fonctionnement du circuit.
     </p>
     <figure>
-        <img src="/common/assets/projects/modi.png" style="width: 100%"/>
+        <img src="/common/assets/projects/modi.png"  width="80%"/>
     </figure>
 </details>
 <details>
@@ -116,7 +193,7 @@
     </p>
     <figure>
         <figcaption>Vidéo de démonstration</figcaption>
-        <video controls>
+        <video controls width="80%">
             <source src="/common/assets/projects/corentin_magnanime.mp4" type="video/mp4">
         </video>
     </figure>

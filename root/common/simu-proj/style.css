@@ -1,0 +1,13 @@
+
+form div      { display: flex; width: 100%; justify-content: space-around; }
+
+table { width: 100%; }
+table td { text-align: center; border: 1px solid black; }
+table td.queue { text-align: right; }
+time { font-style: italic; }
+
+#render-events { display: flex; width: 100%; }
+#render-events > ul { flex-grow: 1; width: 50%; height: 400px; overflow-y:scroll; }
+#render-previous-events { color: #888; }
+
+#simu-control { display: flex; width: 100%; justify-content: space-around; align-items: baseline; }

@@ -1,0 +1,172 @@
+<link rel="stylesheet" href="/common/simu-proj/style.css">
+
+<a href="/fr/simu-proj/" class="big-link">[ Version française ]</a>
+
+<h1>Simulation project - Winter 2021</h1>
+
+<article>
+    <h2>Explanation</h2>
+    <p>
+        During my system simulation course at UQAC, I had to create a simulation to answer the question
+        <q>What would be the repercussion of adding a third elevator in a seven-floor building?</q> 
+    </p><p>
+        The simulation behaves as follows:
+        A person enters the system (at a configurable pace) and ask an elevator. They go to the
+        wanted floor (uniformly distributed), works for a certain time (configurable), asks an elevator
+        and goes back to the first floor.
+        When an elevator is empty, it goes to the first person who asks an elevator. Then, at each
+        floor where someone wants to get out, the elevator takes a break and let people get in and out.
+        Task prioritisation of the elevator is configurable in parameters: an explanatory tooltip
+        is shown when the mouse stays on the option.
+    </p><p>
+        We had to create a simulation without framework. I chosed to use Javascript because it is
+        relatively easy to create an interactive graphical interface, which seemed mandatory for
+        verification and validation of my modelisation.
+        The simulation is event-based: each entity move (people and elevators) corresponds to an event,
+        which is associated to a time T.
+        I use Plotly.js to trace graphs and visualise essential informations.
+    </p><p>
+        Sources are available on <a href="https://github.com/jvernay-fr/www.jvernay.fr/tree/main/root/common/simu-proj">GitHub</a>.
+        A more detailed report (in French) is
+        <a href="/common/simu-proj/rapport.pdf">available here</a>.
+    </p>
+</article>
+
+
+<form><fieldset><legend>Parameters</legend>
+    <small>Modifying F, N or C requires to restart the simulation.</small>
+    <div>
+        <p>
+            <label for="F">F (Number of floors)</label><br/>
+            <input name="F" type="number" min="2" max="20" value="7">
+        </p><p>
+            <label for="N">N (Number of elevators)</label><br/>
+            <input name="N" type="number" min="1" max="10" value="3">
+        </p><p>
+            <label for="C">C (Capacity of an elevator)</label><br/>
+            <input name="C" type="number" min="1" max="10000" value="1000">
+        </p>
+    </div>
+    <fieldset><legend>Behaviour</legend>
+        <div>
+            <p title="The elevator prioritises requests with the waiting time.">
+                <input name="scheduling" value="FCFS" type="radio">
+                <label for="FCFS">First come, first served</label>
+            </p><p title="The elevator prioritises requests which are in the same direction.">
+                <input name="scheduling" value="LinearScan" type="radio" checked>
+                <label for="LinearScan">Linear Scan</label>
+            </p>
+        </div><div>
+            <p title="When the elevator is not requested, it rests on the current floor.">
+                <input name="rest" value="SameFloor" type="radio">
+                <label for="SameFloor">Sleep at current floor</label>
+            </p><p title="When the elevator is not requested, it rests on the middle floor.">
+                <input name="rest" value="MiddleFloor" type="radio" checked>
+                <label for="MiddleFloor">Sleep at middle floor ⌊F/2⌋</label>
+            </p>
+        </div>
+    </fieldset>
+    <div>
+        <p title="Time to work is exponentially distributed.">
+            <label for="workTime">Mean time to work</label> <small>(minutes)</small><br/>
+            <input name="workTime" type="number" min="1" value="60">
+        </p>
+        <p title="Arrivals are exponentially distributed.">
+            <label for="arrivalRate">Mean arrival rate</label> <small>(people per minute)</small><br/>
+            <input name="arrivalRate" type="number" min="0" step="0.1" value="1">
+        </p>
+    </div><div>
+        <p title="Deterministic.">
+            <label for="elevatorSpeed">Elevator speed</label> <small>(seconds per floor)</small><br/>
+            <input name="elevatorSpeed" type="number" min="1" value="10">
+        </p>
+        <p title="Deterministic.">
+            <label for="elevatorWait">Elevator stop duration</label> <small>(seconds)</small><br/>
+            <input name="elevatorWait" type="number" min="1" value="10">
+        </p>
+    </div>
+</fieldset></form>
+
+<div id="simu-control">
+    <button onclick="Simulation.Reset()">Restart</button>
+    <button onclick="Simulation.Advance()">Advance</button>
+    <button onclick="Simulation.AdvanceDetailed()">Step by step</button>
+    <p>
+        <input type="checkbox" name="autoAdvance" onclick="Parameters.Load(); Simulation.AdvanceAuto(0)"><label for="autoAdvance">Auto Advance</label>
+    </p>
+    <p>
+        <label for="advanceFactor">Speed</label>
+        <input type="checkbox" name="advanceMax"><label for="advanceMax">Maximum</label><br/>
+        <input id="advanceFactor" type="number" name="advanceFactor" value="1">
+    </p>
+    <p id="render-time" style="width: 20%">t = 0s</p>
+</div>
+
+<input type="checkbox" name="noRendering"><label for="noRendering">Disable graphical rendering (much faster)</label>
+
+<div id="render-simu"></div>
+
+<div id="render-events">
+    <ul id="render-next-events" style="flex-grow:1;"></ul>
+    <ul id="render-previous-events" style="color:#888;"></ul>
+</div>
+
+<div style="display:flex; width: 100%">
+    <div id="render-timeWaiting" style="width:50%"></div>
+    <div id="render-peopleLocations" style="width:50%"></div>
+</div>
+
+
+
+<script>// Translations, to use same main.js for English and French version.
+
+TRANSLATIONS = {
+    invalidParameters: "Invalid parameters:",
+    emptyValue: "Empty value.",
+    
+    // rendering
+    inTime: "in",
+    titleFloor: "Floor",
+    titleOffice: "Office",
+    titleQueue: "Wait Queue",
+    titleElevators: "Elevators",
+    nextEvents: "Next events",
+    previousEvents: "Previous events",
+    // events
+    events: {
+        enterBuilding(person) { return `${person.html()} arrives in the building..`; },
+        enterFloor(person, floor) { return `${person.html()} arrives at floor ${floor}.`; },
+        enterQueue(person, floor) { return `${person.html()} joins the queue at floor ${floor}.`; },
+        enterElevator(person, elevator) { return `${person.html()} joins the elevator ${elevator.id}.`; },
+        exitElevator(person, elevator) { return `${person.html()} leaves the elevator ${elevator.id}.`; },
+        exitWork(person, floor) { return `${person.html()} stops working at floor ${floor}.`; },
+        
+        elevatorBeginStop(elevator) { return `The elevator ${elevator.id} makes a break at floor ${elevator.floor}.`; },
+        elevatorEndStop(elevator) { return `The elevator ${elevator.id} ends its break at floor ${elevator.floor}.`; },
+        elevatorArrival(elevator, floor) { return `The elevator ${elevator.id} arrives at floor ${floor}.`; },
+        elevatorSleep(elevator) { return `The elevator ${elevator.id} sleeps...`; },
+        elevatorAwake(elevator) { return `The elevator ${elevator.id} awakes.`; },
+    },
+
+    stats: {
+        timeWaiting: "Mean waiting time per floor",
+
+        peopleLocations: "People in system",
+        peopleInQueue: "In a queue",
+        peopleInElevator: "In an elevator",
+        peopleAtWork: "At work",
+        total: "Total",
+    },
+
+    elevatorFull: "Full elevator",
+};
+</script>
+<script src="/common/simu-proj/queue.js"></script>
+<script src="/common/simu-proj/random.js"></script>
+<script src="/common/simu-proj/stats.js"></script>
+<script src="/common/simu-proj/state.js"></script>
+<script src="/common/simu-proj/events.js"></script>
+<script src="/common/simu-proj/plotly.js"></script>
+<script src="/common/simu-proj/rendering.js"></script>
+<script src="/common/simu-proj/main.js"></script>
+

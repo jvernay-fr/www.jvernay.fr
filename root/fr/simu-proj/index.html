@@ -1,0 +1,174 @@
+<link rel="stylesheet" href="/common/simu-proj/style.css">
+
+<a href="/en/simu-proj/" class="big-link">[ English version ]</a>
+
+<h1>Projet de simulation - Hiver 2021</h1>
+
+<article>
+    <h2>Explications</h2>
+    <p>
+        Durant mes cours de simulation de systèmes à l'UQAC, j'ai dû créer une simulation afin de
+        répondre à la question: <q>Quelles seraient les répercussions de l'ajout d'un troisième ascenseur
+        dans un bâtiment à 7 étages ?</q> 
+    </p><p>
+        La simulation se déroule comme suit :
+        Une personne entre dans le système (à un rythme configurable) et demande un ascenseur.
+        Elle se rend à l'étage de son choix (distribué uniformément), travaille un certain temps
+        (configurable), demande un ascenseur et retourne au rez-de-chaussée.
+        Lorsqu'un ascenseur est vide, il se rend à la première personne qui a demandé un ascenseur.
+        Puis, à chaque étage auquel il passe et où des personnes souhaitent descendre, l'ascenseur
+        fait une pause et laisse les personnes descendre et monter.
+        La priorisation de l'ascenseur est configurable dans les paramètres : une info-bulle explicative
+        apparaît en passant sa souris sur l'option.
+    </p><p>
+        Nous devions créer une simulation sans framework. J'ai choisi d'utiliser le Javascript car
+        il est relativement facile de faire une interface graphique interactive, ce qui me semblait
+        indispensable pour pouvoir vérifier et valider ma modélisation.
+        La simulation est événementielle : chaque mouvement des entités (personnes et ascenseurs)
+        est réalisé par un événement, et est associé à un instant T.
+        J'utilise Plotly.js pour tracer les graphiques et visualiser les informations importantes.
+    </p><p>
+        Les sources sont disponibles sur <a href="https://github.com/jvernay-fr/www.jvernay.fr/tree/main/root/common/simu-proj">GitHub</a>.
+        Un rapport plus détaillé sur la conception du système et l'interprétation des résultats est
+        <a href="/common/simu-proj/rapport.pdf">disponible ici</a>.
+    </p>
+</article>
+
+
+<form><fieldset><legend>Paramètres</legend>
+    <small>Modifier F, N ou C nécessite de relancer la simulation.</small>
+    <div>
+        <p>
+            <label for="F">F (Nombre d'étages)</label><br/>
+            <input name="F" type="number" min="2" max="20" value="7">
+        </p><p>
+            <label for="N">N (Nombre d'ascenseurs)</label><br/>
+            <input name="N" type="number" min="1" max="10" value="3">
+        </p><p>
+            <label for="C">C (Capacité par ascenseur)</label><br/>
+            <input name="C" type="number" min="1" max="10000" value="1000">
+        </p>
+    </div>
+    <fieldset><legend>Comportement</legend>
+        <div>
+            <p title="L'ascenseur priorise les demandes suivant le temps attendu.">
+                <input name="scheduling" value="FCFS" type="radio">
+                <label for="FCFS">Premier arrivé, premier servi</label>
+            </p><p title="L'ascenseur priorise les demandes qui vont dans la même direction.">
+                <input name="scheduling" value="LinearScan" type="radio" checked>
+                <label for="LinearScan">Balayage linéaire</label>
+            </p>
+        </div><div>
+            <p title="Quand l'ascenseur n'est pas appelé, il reste à l'étage où il est.">
+                <input name="rest" value="SameFloor" type="radio">
+                <label for="SameFloor">Repos au même étage</label>
+            </p><p title="Quand l'ascenseur n'est pas appelé, il reste à l'étage du milieu.">
+                <input name="rest" value="MiddleFloor" type="radio" checked>
+                <label for="MiddleFloor">Repos à l'étage du milieu ⌊F/2⌋</label>
+            </p>
+        </div>
+    </fieldset>
+    <div>
+        <p title="Le temps de travail est distribué suivant une loi exponentielle.">
+            <label for="workTime">Temps moyen de travail</label> <small>(minutes)</small><br/>
+            <input name="workTime" type="number" min="1" value="60">
+        </p>
+        <p title="Les arrivées sont distribuées suivant une loi exponentielle.">
+            <label for="arrivalRate">Taux moyen des arrivées</label> <small>(personnes par minute)</small><br/>
+            <input name="arrivalRate" type="number" min="0" step="0.1" value="1">
+        </p>
+    </div><div>
+        <p title="Déterministe.">
+            <label for="elevatorSpeed">Vitesse de l'ascenseur</label> <small>(secondes par étage)</small><br/>
+            <input name="elevatorSpeed" type="number" min="1" value="10">
+        </p>
+        <p title="Déterministe.">
+            <label for="elevatorWait">Temps d'arrêt à un étage</label> <small>(en secondes)</small><br/>
+            <input name="elevatorWait" type="number" min="1" value="10">
+        </p>
+    </div>
+</fieldset></form>
+
+<div id="simu-control">
+    <button onclick="Simulation.Reset()">Relancer</button>
+    <button onclick="Simulation.Advance()">Avancer</button>
+    <button onclick="Simulation.AdvanceDetailed()">Pas à pas</button>
+    <p>
+        <input type="checkbox" name="autoAdvance" onclick="Parameters.Load(); Simulation.AdvanceAuto(0)"><label for="autoAdvance">Avance Auto.</label>
+    </p>
+    <p>
+        <label for="advanceFactor">Vitesse</label>
+        <input type="checkbox" name="advanceMax"><label for="advanceMax">Maximale</label><br/>
+        <input id="advanceFactor" type="number" name="advanceFactor" value="1">
+    </p>
+    <p id="render-time" style="width: 20%">t = 0s</p>
+</div>
+
+<input type="checkbox" name="noRendering"><label for="noRendering">Désactiver le rendu graphique (bien plus rapide)</label>
+
+<div id="render-simu"></div>
+
+<div id="render-events">
+    <ul id="render-next-events" style="flex-grow:1;"></ul>
+    <ul id="render-previous-events" style="color:#888;"></ul>
+</div>
+
+<div style="display:flex; width: 100%">
+    <div id="render-timeWaiting" style="width:50%"></div>
+    <div id="render-peopleLocations" style="width:50%"></div>
+</div>
+
+
+
+<script>// Translations, to use same main.js for English and French version.
+
+TRANSLATIONS = {
+    invalidParameters: "Paramètres invalides :",
+    emptyValue: "Valeur vide.",
+    
+    // rendering
+    inTime: "dans",
+    titleFloor: "Étage",
+    titleOffice: "Bureau",
+    titleQueue: "File d'attente",
+    titleElevators: "Ascenseurs",
+    nextEvents: "Prochains événements",
+    previousEvents: "Événements passés",
+    // events
+    events: {
+        enterBuilding(person) { return `${person.html()} arrive dans le bâtiment.`; },
+        enterFloor(person, floor) { return `${person.html()} arrive à l'étage ${floor}.`; },
+        enterQueue(person, floor) { return `${person.html()} rejoint la queue à l'étage ${floor}.`; },
+        enterElevator(person, elevator) { return `${person.html()} rejoint l'ascenseur ${elevator.id}.`; },
+        exitElevator(person, elevator) { return `${person.html()} quitte l'ascenseur ${elevator.id}.`; },
+        exitWork(person, floor) { return `${person.html()} quitte son travail à l'étage ${floor}.`; },
+        
+        elevatorBeginStop(elevator) { return `L'ascenseur ${elevator.id} fait un arrêt à l'étage ${elevator.floor}.`; },
+        elevatorEndStop(elevator) { return `L'ascenseur ${elevator.id} finit son arrêt à l'étage ${elevator.floor}.`; },
+        elevatorArrival(elevator, floor) { return `L'ascenseur ${elevator.id} arrive à l'étage ${floor}.`; },
+        elevatorSleep(elevator) { return `L'ascenseur ${elevator.id} se met en pause...`; },
+        elevatorAwake(elevator) { return `L'ascenseur ${elevator.id} se réveille.`; },
+    },
+
+    stats: {
+        timeWaiting: "Temps moyen d'attente par étage",
+
+        peopleLocations: "Personnes dans le système",
+        peopleInQueue: "Dans une file",
+        peopleInElevator: "Dans un ascenseur",
+        peopleAtWork: "Au travail",
+        total: "Total",
+    },
+
+    elevatorFull: "Ascenseur plein",
+};
+</script>
+<script src="/common/simu-proj/queue.js"></script>
+<script src="/common/simu-proj/random.js"></script>
+<script src="/common/simu-proj/stats.js"></script>
+<script src="/common/simu-proj/state.js"></script>
+<script src="/common/simu-proj/events.js"></script>
+<script src="/common/simu-proj/plotly.js"></script>
+<script src="/common/simu-proj/rendering.js"></script>
+<script src="/common/simu-proj/main.js"></script>
+
