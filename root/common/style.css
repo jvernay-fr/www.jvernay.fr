@@ -100,6 +100,14 @@ h2 {
     border-bottom: 1px solid var(--silver);
 }
 
+h3 {
+    padding-left: 6rem;
+    font-size: 1.2em;
+    font-weight: normal;
+    font-style: italic;
+    color: var(--navy);
+}
+
 .tags {
     color: var(--purple);
     font-family: var(--monospace-font);
@@ -133,7 +141,14 @@ blockquote {
 }
 
 pre, code { background-color: #fafafa; }
-pre { padding: 10px; }
+pre { 
+    padding: 10px;
+    max-height: 500px;
+    overflow-y: scroll;
+    border: 1px solid var(--silver);
+    font-size: 0.8em;
+    line-height: 110%;
+}
 
 dt, dd {
     display: inline-block;
